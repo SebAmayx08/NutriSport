@@ -4,11 +4,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
-
 public final class Validador {
 
     private Validador() {
     }
+
 
 
     public static String validarTextoNoVacio(String valor, String campo) throws DatoInvalidoException {
@@ -46,6 +46,9 @@ public final class Validador {
         }
     }
 
+    // ---------------------------------------------------------------
+    // Lecturas con reintento
+    // ---------------------------------------------------------------
 
     public static String leerTexto(Scanner scanner, String campo) {
         while (true) {

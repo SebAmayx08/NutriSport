@@ -1,6 +1,5 @@
 package nutrisport.util;
 
-
 public class DatoInvalidoException extends Exception {
 
     private static final long serialVersionUID = 1L;
