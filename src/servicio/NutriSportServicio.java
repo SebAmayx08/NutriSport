@@ -2,8 +2,10 @@ package servicio;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
 import modelo.Comida;
 import modelo.ConsumoAgua;
 import modelo.ResumenDiario;
@@ -21,6 +23,7 @@ public class NutriSportServicio {
     public static final int META_AGUA_INICIAL = 2000;
     public static final int META_AGUA_MIN = 500;
     public static final int META_AGUA_MAX = 10000;
+    public static final int COMIDAS_PRINCIPALES_MAX = 3; // desayuno, almuerzo y cena
 
     private ArrayList<Comida> comidas = new ArrayList<>();
     private ArrayList<ConsumoAgua> aguas = new ArrayList<>();
@@ -28,6 +31,13 @@ public class NutriSportServicio {
 
     private int siguienteId = 1;              // un solo contador para que cada ID sea único
     private int metaAgua = META_AGUA_INICIAL;
+
+    // ---------- Validaciones comunes ----------
+    private void validarFecha(LocalDate fecha) throws EntradaInvalidaException {
+        if (fecha == null) {
+            throw new EntradaInvalidaException("La fecha no puede ser nula.");
+        }
+    }
 
     // ---------- Registrar ----------
     public Comida registrarComida(String nombre, TipoComida tipo, LocalDate fecha)
@@ -38,6 +48,7 @@ public class NutriSportServicio {
         if (tipo == null) {
             throw new EntradaInvalidaException("Debe elegir un tipo de comida.");
         }
+        validarFecha(fecha);
         Comida c = new Comida(siguienteId++, nombre.trim(), tipo, fecha);
         comidas.add(c);
         return c;
@@ -47,6 +58,7 @@ public class NutriSportServicio {
         if (ml < 1 || ml > AGUA_MAX_REGISTRO) {
             throw new EntradaInvalidaException("El agua debe estar entre 1 y " + AGUA_MAX_REGISTRO + " ml.");
         }
+        validarFecha(fecha);
         ConsumoAgua a = new ConsumoAgua(siguienteId++, ml, fecha);
         aguas.add(a);
         return a;
@@ -61,6 +73,7 @@ public class NutriSportServicio {
             throw new EntradaInvalidaException("La duración debe estar entre " + DURACION_MIN
                     + " y " + DURACION_MAX + " minutos.");
         }
+        validarFecha(fecha);
         RutinaDeportiva r = new RutinaDeportiva(siguienteId++, nombre.trim(), minutos, fecha);
         rutinas.add(r);
         return r;
@@ -99,25 +112,9 @@ public class NutriSportServicio {
 
     // ---------- Eliminar: busca el ID en las tres listas ----------
     public boolean eliminarPorId(int id) {
-        for (int i = 0; i < comidas.size(); i++) {
-            if (comidas.get(i).getId() == id) {
-                comidas.remove(i);
-                return true;
-            }
-        }
-        for (int i = 0; i < aguas.size(); i++) {
-            if (aguas.get(i).getId() == id) {
-                aguas.remove(i);
-                return true;
-            }
-        }
-        for (int i = 0; i < rutinas.size(); i++) {
-            if (rutinas.get(i).getId() == id) {
-                rutinas.remove(i);
-                return true;
-            }
-        }
-        return false; // no existe ese ID
+        return comidas.removeIf(c -> c.getId() == id)
+                || aguas.removeIf(a -> a.getId() == id)
+                || rutinas.removeIf(r -> r.getId() == id);
     }
 
     // ---------- Meta de agua ----------
@@ -135,8 +132,8 @@ public class NutriSportServicio {
 
     // ---------- Resumen diario (T-13) ----------
     public ResumenDiario generarResumen(LocalDate fecha) {
-        // HashMap: tipo de comida -> cantidad (todos empiezan en 0)
-        HashMap<TipoComida, Integer> porTipo = new HashMap<>();
+        // EnumMap: tipo de comida -> cantidad, siempre en el orden del enum
+        Map<TipoComida, Integer> porTipo = new EnumMap<>(TipoComida.class);
         for (TipoComida t : TipoComida.values()) {
             porTipo.put(t, 0);
         }
@@ -146,7 +143,7 @@ public class NutriSportServicio {
             }
         }
 
-        // Comidas principales distintas registradas (máximo 3)
+        // Comidas principales distintas registradas (máximo COMIDAS_PRINCIPALES_MAX)
         int principales = 0;
         for (TipoComida t : TipoComida.values()) {
             if (t.esPrincipal() && porTipo.get(t) > 0) {
@@ -163,12 +160,13 @@ public class NutriSportServicio {
         double porcentaje = totalMl * 100.0 / metaAgua;
 
         // HashSet: no permite repetidos, así cuenta las actividades distintas
+        // (se ignoran mayúsculas y espacios: "Yoga" y "yoga " son la misma)
         int totalMinutos = 0;
         HashSet<String> distintas = new HashSet<>();
         for (RutinaDeportiva r : rutinas) {
             if (r.getFecha().equals(fecha)) {
                 totalMinutos += r.getMinutos();
-                distintas.add(r.getNombre().toLowerCase());
+                distintas.add(r.getNombre().trim().toLowerCase(Locale.ROOT));
             }
         }
 

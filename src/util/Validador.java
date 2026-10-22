@@ -11,17 +11,18 @@ public class Validador {
         while (true) {
             System.out.print(mensaje);
             String texto = sc.nextLine().trim();
+            int valor;
             try {
-                int valor = Integer.parseInt(texto); // falla si hay letras o está vacío
-                if (valor < min || valor > max) {
-                    throw new EntradaInvalidaException("El valor debe estar entre " + min + " y " + max + ".");
-                }
-                return valor;
+                valor = Integer.parseInt(texto); // falla si hay letras o está vacío
             } catch (NumberFormatException e) {
                 System.out.println("Error: debe escribir un número entero.");
-            } catch (EntradaInvalidaException e) {
-                System.out.println("Error: " + e.getMessage());
+                continue;
             }
+            if (valor < min || valor > max) {
+                System.out.println("Error: el valor debe estar entre " + min + " y " + max + ".");
+                continue;
+            }
+            return valor;
         }
     }
 
