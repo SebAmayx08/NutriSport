@@ -1,5 +1,6 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import modelo.Comida;
 import modelo.ConsumoAgua;
@@ -28,21 +29,26 @@ public class Main {
     };
 
     public static void main(String[] args) {
-        int opcion;
-        do {
-            mostrarMenu();
-            opcion = Validador.leerEntero(sc, "Elija una opción: ", 1, OPCIONES.length);
-            switch (opcion) {
-                case 1: registrarComida(); break;
-                case 2: registrarAgua(); break;
-                case 3: registrarRutina(); break;
-                case 4: consultar(); break;
-                case 5: eliminar(); break;
-                case 6: configurarMeta(); break;
-                case 7: verResumen(); break;
-                case 8: System.out.println("¡Hasta pronto!"); break;
-            }
-        } while (opcion != OPCIONES.length);
+        try {
+            int opcion;
+            do {
+                mostrarMenu();
+                opcion = Validador.leerEntero(sc, "Elija una opción: ", 1, OPCIONES.length);
+                switch (opcion) {
+                    case 1: registrarComida(); break;
+                    case 2: registrarAgua(); break;
+                    case 3: registrarRutina(); break;
+                    case 4: consultar(); break;
+                    case 5: eliminar(); break;
+                    case 6: configurarMeta(); break;
+                    case 7: verResumen(); break;
+                    case 8: System.out.println("¡Hasta pronto!"); break;
+                }
+            } while (opcion != OPCIONES.length);
+        } catch (NoSuchElementException e) {
+            // La entrada se cerró (Ctrl+D / Ctrl+Z): salimos sin mostrar el error
+            System.out.println("\nEntrada finalizada. ¡Hasta pronto!");
+        }
         sc.close();
     }
 
@@ -153,7 +159,8 @@ public class Main {
         for (TipoComida t : TipoComida.values()) {
             System.out.println("  - " + t.getNombre() + ": " + r.getComidasPorTipo().get(t));
         }
-        System.out.println("Comidas principales registradas: " + r.getPrincipalesRegistradas() + " de 3");
+        System.out.println("Comidas principales registradas: " + r.getPrincipalesRegistradas() + " de "
+                + NutriSportServicio.COMIDAS_PRINCIPALES_MAX);
         System.out.println("Agua: " + r.getTotalMl() + " ml de " + r.getMetaMl() + " ml ("
                 + String.format("%.1f", r.getPorcentajeMeta()) + "% de la meta)");
         System.out.println("Actividad física: " + r.getTotalMinutos() + " min, "
